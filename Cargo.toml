@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-bevy = { version = "0.11", default-features = false, features = ["bevy_render", "bevy_asset", "bevy_pbr", "bevy_core_pipeline", "bevy_scene", "bevy_gltf", "tonemapping_luts", "ktx2", "zstd"] }
+bevy = { vesrion = "0.11.0" }
+#bevy = { version = "0.11.0", default-features = false, features = ["bevy_render", "bevy_asset", "bevy_pbr", "bevy_core_pipeline", "bevy_scene", "bevy_gltf", "tonemapping_luts", "ktx2", "zstd"] }
+
 image = "0.24"
 futures-lite = "1.12"
 
@@ -23,6 +25,5 @@ opt-level = 1
 opt-level = 3
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.87"
-web-sys = {version = "0.3", features = ["console"]}
+web-sys = { version = "0.3.40", features = ["GpuTextureFormat", "GpuTextureSampleType", "GpuCullMode", "console"] }
 

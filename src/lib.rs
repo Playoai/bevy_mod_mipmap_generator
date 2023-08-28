@@ -74,6 +74,8 @@ pub fn generate_mipmaps<M: Material + GetImages>(
     default_sampler: Res<DefaultSampler>,
     settings: Res<MipmapGeneratorSettings>,
 ) {
+    let mut materials_to_touch = Vec::new(); // Used to store materials we want to touch after loop
+
     'outer: for event in material_events.iter() {
         let material_h = match event {
             AssetEvent::Created { handle } => handle,
@@ -98,7 +100,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
                         match generate_mips_texture(&mut image_clone, &settings) {
                             Ok(_) => {
                                 *image = image_clone; // Replace the image with the new one with mipmaps
-                                let _ = materials.get_mut(material_h); // Touch material to trigger change detection
+                                materials_to_touch.push(material_h.clone()); // Add material handle to touch list
                             }
                             Err(e) => warn!("{}", e),
                         }
@@ -107,7 +109,13 @@ pub fn generate_mipmaps<M: Material + GetImages>(
             }
         }
     }
+
+    // Touch the materials after the loop
+    for material_h in materials_to_touch {
+        let _ = materials.get_mut(&material_h); // Touch material to trigger change detection
+    }
 }
+
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "unknown")))]
 #[allow(clippy::too_many_arguments)]
