@@ -46,8 +46,6 @@ impl Plugin for MipmapGeneratorPlugin {
             app.insert_resource(DefaultSampler(default_sampler))
                 .init_resource::<MipmapGeneratorSettings>();
 
-            //#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
-            app.add_systems(generate_mipmaps_startup);
 
         } else {
             warn!("No ImagePlugin found. Try adding MipmapGeneratorPlugin after DefaultPlugins");
@@ -78,7 +76,10 @@ pub fn generate_mipmaps_startup(
     }
     commands.insert_resource(MipmapGenerated);
 }
-/*pub fn generate_mipmaps_for_one_material_system(
+
+// WEB
+#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
+pub fn generate_mipmaps_for_one_material_system<M: Material + GetImages>(
     mut commands: Commands,
     target_material_handle: Res<TargetMaterialHandle>,
     materials: Res<Assets<StandardMaterial>>,
@@ -103,7 +104,7 @@ pub fn generate_mipmaps_startup(
 
         commands.insert_resource(MipmapsGenerated);
     }
-}*/
+}
 
 #[derive(Resource)]
 pub struct MipmapsGenerated;
@@ -113,6 +114,51 @@ pub struct TargetMaterialHandle(Handle<StandardMaterial>);
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct MipmapTasks<M: Material + GetImages>(HashMap<Handle<Image>, (Task<Image>, Handle<M>)>);
+
+#[cfg(target_arch = "wasm32")]
+pub fn generate_mipmaps<M: Material + GetImages>(
+    mut commands: Commands,
+    mut material_events: EventReader<AssetEvent<M>>,
+    mut materials: ResMut<Assets<M>>,
+    no_mipmap: Query<&Handle<M>, With<NoMipmapGeneration>>,
+    mut images: ResMut<Assets<Image>>,
+    default_sampler: Res<DefaultSampler>,
+    settings: Res<MipmapGeneratorSettings>,
+) {
+    'outer: for event in material_events.iter() {
+        let material_h = match event {
+            AssetEvent::Created { handle } => handle,
+            _ => continue,
+        };
+        for m in no_mipmap.iter() {
+            if m == material_h {
+                continue 'outer;
+            }
+        }
+        if let Some(material) = materials.get_mut(material_h) {
+            for image_h in material.get_images().into_iter() {
+                if let Some(image) = images.get_mut(image_h) {
+                    let mut descriptor = match image.sampler_descriptor.clone() {
+                        ImageSampler::Default => (*default_sampler).clone(),
+                        ImageSampler::Descriptor(descriptor) => descriptor,
+                    };
+                    descriptor.anisotropy_clamp = settings.anisotropic_filtering;
+                    image.sampler_descriptor = ImageSampler::Descriptor(descriptor);
+                    if image.texture_descriptor.mip_level_count == 1 && check_image_compatible(image).is_ok() {
+                        let mut image_clone = image.clone();
+                        match generate_mips_texture(&mut image_clone, &settings) {
+                            Ok(_) => {
+                                *image = image_clone; // Replace the image with the new one with mipmaps
+                                let _ = materials.get_mut(material_h); // Touch material to trigger change detection
+                            }
+                            Err(e) => warn!("{}", e),
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "unknown")))]
 #[allow(clippy::too_many_arguments)]
