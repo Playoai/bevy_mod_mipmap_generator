@@ -51,9 +51,47 @@ impl Plugin for MipmapGeneratorPlugin {
     }
 }
 
+// WEB
+#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
+pub fn generate_mipmaps_for_one_material_system(
+    mut commands: Commands,
+    target_material_handle: Res<TargetMaterialHandle>,
+    materials: Res<Assets<StandardMaterial>>,
+    mut images: ResMut<Assets<Image>>,
+    mipmaps_generated: Option<Res<MipmapsGenerated>>,
+) {
+    if Some(mipmaps_generated).is_none() {
+        return;
+    }
+
+    if let Some(material) = materials.get(&target_material_handle.0) {
+        for image_h in material.get_images() {
+            if let Some(image) = images.get_mut(image_h) {
+                match generate_mips_texture(image, &MipmapGeneratorSettings::default()) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("Error generating mipmaps: {}", e);
+                    }
+                }
+            }
+        }
+
+        commands.insert_resource(MipmapsGenerated);
+    }
+}
+
+// WEB
+#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
+#[derive(Resource)]
+pub struct MipmapsGenerated;
+
+#[derive(Resource)] 
+pub struct TargetMaterialHandle(Handle<StandardMaterial>);
+
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct MipmapTasks<M: Material + GetImages>(HashMap<Handle<Image>, (Task<Image>, Handle<M>)>);
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "unknown")))]
 #[allow(clippy::too_many_arguments)]
 pub fn generate_mipmaps<M: Material + GetImages>(
     mut commands: Commands,
