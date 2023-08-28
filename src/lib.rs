@@ -53,7 +53,28 @@ impl Plugin for MipmapGeneratorPlugin {
 
 // WEB
 #[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
-pub fn generate_mipmaps_for_one_material_system(
+pub fn generate_mipmaps_startup(
+      mut commands: Commands,
+    materials: Res<Assets<StandardMaterial>>,
+    mut images: ResMut<Assets<Image>>,
+    mut texture: ResMut<Assets<Texture>>,
+    ) {
+        for (material_h, material) in materials.iter() {
+        for image_h in material.get_images() {
+            if let Some(image) = images.get_mut(image_h) {
+                // Generate mipmaps synchronously here
+                match generate_mips_texture(image, &MipmapGeneratorSettings::default()) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        eprintln!("Error generating mipmaps: {}", e);
+                    }
+                }
+            }
+        }
+    }
+    commands.insert_resource(MipmapGenerated);
+}
+/*pub fn generate_mipmaps_for_one_material_system(
     mut commands: Commands,
     target_material_handle: Res<TargetMaterialHandle>,
     materials: Res<Assets<StandardMaterial>>,
@@ -78,7 +99,7 @@ pub fn generate_mipmaps_for_one_material_system(
 
         commands.insert_resource(MipmapsGenerated);
     }
-}
+}*/
 
 #[derive(Resource)]
 pub struct MipmapsGenerated;
