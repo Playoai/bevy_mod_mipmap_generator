@@ -80,8 +80,6 @@ pub fn generate_mipmaps_for_one_material_system(
     }
 }
 
-// WEB
-#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
 #[derive(Resource)]
 pub struct MipmapsGenerated;
 
