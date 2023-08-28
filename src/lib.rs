@@ -65,7 +65,7 @@ pub struct TargetMaterialHandle(Handle<StandardMaterial>);
 pub struct MipmapTasks<M: Material + GetImages>(HashMap<Handle<Image>, (Task<Image>, Handle<M>)>);
 
 #[cfg(target_arch = "wasm32")]
-pub fn generate_mipmaps<M: Material + GetImages>(
+pub fn generate_mipmaps_wasm<M: Material + GetImages>(
     mut commands: Commands,
     mut material_events: EventReader<AssetEvent<M>>,
     mut materials: ResMut<Assets<M>>,
