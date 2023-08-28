@@ -47,7 +47,7 @@ impl Plugin for MipmapGeneratorPlugin {
                 .init_resource::<MipmapGeneratorSettings>();
 
             #[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
-            app.add_systems(generate_mipmaps_startup);
+       //     app.add_systems(generate_mipmaps_startup);
 
         } else {
             warn!("No ImagePlugin found. Try adding MipmapGeneratorPlugin after DefaultPlugins");
