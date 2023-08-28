@@ -63,6 +63,7 @@ pub fn generate_mipmaps_startup(
     mut images: ResMut<Assets<Image>>,
     mut texture: ResMut<Assets<Texture>>,
     ) {
+    return;
         for (material_h, material) in materials.iter() {
         for image_h in material.get_images() {
             if let Some(image) = images.get_mut(image_h) {
