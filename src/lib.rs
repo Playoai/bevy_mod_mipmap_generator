@@ -46,7 +46,7 @@ impl Plugin for MipmapGeneratorPlugin {
             app.insert_resource(DefaultSampler(default_sampler))
                 .init_resource::<MipmapGeneratorSettings>();
 
-            #[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
+            //#[cfg(any(target_arch = "wasm32", target_os = "unknown"))]
             app.add_systems(generate_mipmaps_startup);
 
         } else {
