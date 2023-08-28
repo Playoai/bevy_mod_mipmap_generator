@@ -63,7 +63,7 @@ pub struct TargetMaterialHandle(Handle<StandardMaterial>);
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct MipmapTasks<M: Material + GetImages>(HashMap<Handle<Image>, (Task<Image>, Handle<M>)>);
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(target_arch = "wasm32", target_os = "unknown")]
 pub fn generate_mipmaps<M: Material + GetImages>(
     mut commands: Commands,
     mut material_events: EventReader<AssetEvent<M>>,
