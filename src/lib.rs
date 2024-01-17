@@ -75,6 +75,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
     settings: Res<MipmapGeneratorSettings>,
 ) {
     let mut materials_to_touch = Vec::new(); // Used to store materials we want to touch after loop
+    println!("Generating mipmaps");
 
     'outer: for event in material_events.iter() {
         let material_h = match event {
